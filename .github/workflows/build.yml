@@ -81,11 +81,14 @@ jobs:
 
   # -----------------------------------------------------------------------
   # 3. Build the macOS (Apple Silicon) installer.
-  #    macOS GitHub-hosted runners are tight on disk; we wipe the
-  #    pre-installed Xcode SDK and DerivedData before PyInstaller runs.
+  #    The macOS GitHub-hosted runner has only ~14 GB of free space; even
+  #    after wiping Xcode and DerivedData, hdiutil consistently fails with
+  #    "No space left on device" while building a compressed .dmg. We
+  #    skip the .dmg and ship the .app as a .zip instead. Users unzip and
+  #    double-click; macOS handles it natively.
   # -----------------------------------------------------------------------
   build-macos-arm:
-    name: Build macOS arm64 .dmg
+    name: Build macOS arm64 .app
     needs: detect-updates
     if: |
       needs.detect-updates.outputs.needs_update == 'true' ||
@@ -101,9 +104,6 @@ jobs:
         run: |
           echo "Before cleanup:"
           df -h / | tail -1
-          # Standard macOS runner disk-cleanup. These are pre-installed SDKs
-          # and caches that we never need; reclaiming them gives PyInstaller
-          # + hdiutil enough headroom for a 200MB+ build.
           sudo rm -rf /Applications/Xcode_*.app
           sudo rm -rf /Library/Developer/CoreSimulator
           sudo rm -rf /Users/runner/Library/Developer/Xcode/DerivedData
@@ -117,23 +117,22 @@ jobs:
         run: pip install pyinstaller==6.*
       - name: Build with PyInstaller
         run: pyinstaller build.spec --clean
-      - name: Wrap .app in .dmg
+      - name: Zip the .app
         run: |
-          hdiutil create -volname "AI Tools Installer" \
-            -srcfolder dist/AI_Tools_Installer.app \
-            -ov -format UDZO \
-            dist/AI_Tools_Installer_macOS_arm64.dmg
+          ditto -c -k --sequesterRsrc --keepParent \
+            dist/AI_Tools_Installer.app \
+            dist/AI_Tools_Installer_macOS_arm64.zip
       - uses: actions/upload-artifact@v4
         with:
           name: AI_Tools_Installer_macOS_arm64
-          path: dist/AI_Tools_Installer_macOS_arm64.dmg
+          path: dist/AI_Tools_Installer_macOS_arm64.zip
 
   # -----------------------------------------------------------------------
   # 4. Build the macOS (Intel) installer. macos-13 is the last GitHub-hosted
   #    runner with an x86_64 image.
   # -----------------------------------------------------------------------
   build-macos-x64:
-    name: Build macOS x64 .dmg
+    name: Build macOS x64 .app
     needs: detect-updates
     if: |
       needs.detect-updates.outputs.needs_update == 'true' ||
@@ -162,16 +161,15 @@ jobs:
         run: pip install pyinstaller==6.*
       - name: Build with PyInstaller
         run: pyinstaller build.spec --clean
-      - name: Wrap .app in .dmg
+      - name: Zip the .app
         run: |
-          hdiutil create -volname "AI Tools Installer" \
-            -srcfolder dist/AI_Tools_Installer.app \
-            -ov -format UDZO \
-            dist/AI_Tools_Installer_macOS_x64.dmg
+          ditto -c -k --sequesterRsrc --keepParent \
+            dist/AI_Tools_Installer.app \
+            dist/AI_Tools_Installer_macOS_x64.zip
       - uses: actions/upload-artifact@v4
         with:
           name: AI_Tools_Installer_macOS_x64
-          path: dist/AI_Tools_Installer_macOS_x64.dmg
+          path: dist/AI_Tools_Installer_macOS_x64.zip
 
   # -----------------------------------------------------------------------
   # 5. Cut a GitHub release with all three artifacts. Skipped if any build
@@ -199,11 +197,11 @@ jobs:
 
             **Artifacts:**
             - `AI_Tools_Installer_Windows.exe` — Windows x64
-            - `AI_Tools_Installer_macOS_arm64.dmg` — macOS Apple Silicon
-            - `AI_Tools_Installer_macOS_x64.dmg` — macOS Intel
+            - `AI_Tools_Installer_macOS_arm64.zip` — macOS Apple Silicon (unzip, double-click `AI Tools Installer.app`)
+            - `AI_Tools_Installer_macOS_x64.zip` — macOS Intel (unzip, double-click `AI Tools Installer.app`)
           files: |
             artifacts/AI_Tools_Installer_Windows/AI_Tools_Installer_Windows.exe
-            artifacts/AI_Tools_Installer_macOS_arm64/AI_Tools_Installer_macOS_arm64.dmg
-            artifacts/AI_Tools_Installer_macOS_x64/AI_Tools_Installer_macOS_x64.dmg
+            artifacts/AI_Tools_Installer_macOS_arm64/AI_Tools_Installer_macOS_arm64.zip
+            artifacts/AI_Tools_Installer_macOS_x64/AI_Tools_Installer_macOS_x64.zip
           fail_on_unmatched_files: false
           generate_release_notes: true
