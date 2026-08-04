@@ -1,0 +1,183 @@
+name: build-installer
+
+# Triggers:
+#   - schedule: every day at 04:00 UTC. Re-runs the version check; if any of
+#     the 5 CLIs has shipped a new release, the build jobs fire and a new
+#     GitHub release is cut.
+#   - workflow_dispatch: manual trigger from the Actions tab. Always builds.
+#   - push: rebuild whenever the Python source or this workflow changes,
+#     even if no upstream CLI has a new release — useful for shipping a UI
+#     tweak to the offline installer.
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'gui_installer.py'
+      - 'build.spec'
+      - 'scripts/fetch_latest.py'
+      - '.github/workflows/build.yml'
+
+# Read-only by default; release job escalates to write to create releases.
+permissions:
+  contents: write
+
+jobs:
+  # -----------------------------------------------------------------------
+  # 1. Detect CLI updates. Pure inspection, no downloads. Runs on Linux
+  #    so we don't waste a Windows/macOS runner on what is essentially
+  #    a metadata call.
+  # -----------------------------------------------------------------------
+  detect-updates:
+    name: Detect CLI updates
+    runs-on: ubuntu-latest
+    outputs:
+      needs_update: ${{ steps.check.outputs.needs_update }}
+      updated: ${{ steps.check.outputs.updated }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - id: check
+        run: python scripts/fetch_latest.py --check --platform clis
+      - name: Summary
+        run: |
+          echo "needs_update=${{ steps.check.outputs.needs_update }}"
+          echo "updated=${{ steps.check.outputs.updated }}"
+
+  # -----------------------------------------------------------------------
+  # 2. Build the Windows installer.
+  #    Gates on: any CLI update OR a source push OR a manual run.
+  # -----------------------------------------------------------------------
+  build-windows:
+    name: Build Windows .exe
+    needs: detect-updates
+    if: |
+      needs.detect-updates.outputs.needs_update == 'true' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download latest CLI payloads (Windows)
+        run: python scripts/fetch_latest.py --download --platform windows
+      - name: Install PyInstaller
+        run: pip install pyinstaller==6.*
+      - name: Build with PyInstaller
+        run: pyinstaller build.spec --clean
+      - name: Rename artifact
+        shell: pwsh
+        run: |
+          mv dist/AI_Tools_Installer.exe dist/AI_Tools_Installer_Windows.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI_Tools_Installer_Windows
+          path: dist/AI_Tools_Installer_Windows.exe
+
+  # -----------------------------------------------------------------------
+  # 3. Build the macOS (Apple Silicon) installer.
+  # -----------------------------------------------------------------------
+  build-macos-arm:
+    name: Build macOS arm64 .dmg
+    needs: detect-updates
+    if: |
+      needs.detect-updates.outputs.needs_update == 'true' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download latest CLI payloads (macOS arm64)
+        run: python scripts/fetch_latest.py --download --platform macos-arm
+      - name: Install PyInstaller
+        run: pip install pyinstaller==6.*
+      - name: Build with PyInstaller
+        run: pyinstaller build.spec --clean
+      - name: Wrap .app in .dmg
+        run: |
+          hdiutil create -volname "AI Tools Installer" \
+            -srcfolder dist/AI_Tools_Installer.app \
+            -ov -format UDZO \
+            dist/AI_Tools_Installer_macOS_arm64.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI_Tools_Installer_macOS_arm64
+          path: dist/AI_Tools_Installer_macOS_arm64.dmg
+
+  # -----------------------------------------------------------------------
+  # 4. Build the macOS (Intel) installer. Runs on macos-13, the last
+  #    GitHub-hosted runner with an x86_64 image.
+  # -----------------------------------------------------------------------
+  build-macos-x64:
+    name: Build macOS x64 .dmg
+    needs: detect-updates
+    if: |
+      needs.detect-updates.outputs.needs_update == 'true' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push'
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download latest CLI payloads (macOS x64)
+        run: python scripts/fetch_latest.py --download --platform macos-x64
+      - name: Install PyInstaller
+        run: pip install pyinstaller==6.*
+      - name: Build with PyInstaller
+        run: pyinstaller build.spec --clean
+      - name: Wrap .app in .dmg
+        run: |
+          hdiutil create -volname "AI Tools Installer" \
+            -srcfolder dist/AI_Tools_Installer.app \
+            -ov -format UDZO \
+            dist/AI_Tools_Installer_macOS_x64.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI_Tools_Installer_macOS_x64
+          path: dist/AI_Tools_Installer_macOS_x64.dmg
+
+  # -----------------------------------------------------------------------
+  # 5. Cut a GitHub release with all three artifacts. Tag uses the date
+  #    so each daily run produces a unique, chronologically-sortable tag.
+  #    Skipped if any build failed.
+  # -----------------------------------------------------------------------
+  release:
+    name: Cut GitHub Release
+    needs: [build-windows, build-macos-arm, build-macos-x64]
+    if: success() && (needs.detect-updates.outputs.needs_update == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: installer-${{ github.run_number }}-${{ github.event.repository.name }}
+          name: AI Tools Installer — ${{ github.event.head_commit.timestamp || github.run_started_at }}
+          body: |
+            Auto-built by the [build-installer workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+
+            **Updated tools in this build:**
+            ${{ needs.detect-updates.outputs.updated }}
+
+            **Artifacts:**
+            - `AI_Tools_Installer_Windows.exe` — Windows x64
+            - `AI_Tools_Installer_macOS_arm64.dmg` — macOS Apple Silicon
+            - `AI_Tools_Installer_macOS_x64.dmg` — macOS Intel
+          files: |
+            artifacts/AI_Tools_Installer_Windows/AI_Tools_Installer_Windows.exe
+            artifacts/AI_Tools_Installer_macOS_arm64/AI_Tools_Installer_macOS_arm64.dmg
+            artifacts/AI_Tools_Installer_macOS_x64/AI_Tools_Installer_macOS_x64.dmg
+          fail_on_unmatched_files: false
+          generate_release_notes: true

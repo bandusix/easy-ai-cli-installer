@@ -24,6 +24,9 @@ upstream.
 | File | Purpose |
 | --- | --- |
 | `gui_installer.py` | The full Tkinter application. Drop this into the upstream repo to replace the original. |
+| `build.spec` | PyInstaller spec. Bundles `payload/` into the executable so the offline mode keeps working after packaging. |
+| `scripts/fetch_latest.py` | Stdlib-only probe + download script. Used by the CI to detect and pull new CLI versions. |
+| `.github/workflows/build.yml` | The "auto-update" workflow. Runs daily, builds new installers on any CLI update, and cuts a GitHub release. |
 | `LICENSE` | MIT, identical to upstream. |
 | `.gitignore` | Excludes `payload/`, build artifacts, IDE noise. |
 
@@ -127,6 +130,13 @@ already runs PyInstaller against `gui_installer.py`. Once this file is
 dropped in as a replacement, the existing release pipeline produces
 `AI_Tools_Installer_Windows.exe` and `AI_Tools_Installer_macOS.dmg` with
 the new features.
+
+This fork ships its own `.github/workflows/build.yml` that does the same
+plus an automatic-version-check step. See [CI.md](CI.md) for the full
+pipeline description. In short: a daily cron probes npm and GitHub
+Releases; if any of the 5 CLIs has a newer version, the workflow
+re-downloads its payload, rebuilds the three platform installers, and
+publishes them as a GitHub release.
 
 ## License
 
