@@ -81,6 +81,8 @@ jobs:
 
   # -----------------------------------------------------------------------
   # 3. Build the macOS (Apple Silicon) installer.
+  #    macOS GitHub-hosted runners are tight on disk; we wipe the
+  #    pre-installed Xcode SDK and DerivedData before PyInstaller runs.
   # -----------------------------------------------------------------------
   build-macos-arm:
     name: Build macOS arm64 .dmg
@@ -95,6 +97,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Free up disk space
+        run: |
+          echo "Before cleanup:"
+          df -h / | tail -1
+          # Standard macOS runner disk-cleanup. These are pre-installed SDKs
+          # and caches that we never need; reclaiming them gives PyInstaller
+          # + hdiutil enough headroom for a 200MB+ build.
+          sudo rm -rf /Applications/Xcode_*.app
+          sudo rm -rf /Library/Developer/CoreSimulator
+          sudo rm -rf /Users/runner/Library/Developer/Xcode/DerivedData
+          sudo rm -rf /Users/runner/Library/Caches
+          sudo rm -rf /opt/homebrew
+          echo "After cleanup:"
+          df -h / | tail -1
       - name: Download latest CLI payloads (macOS arm64)
         run: python scripts/fetch_latest.py --download --platform macos-arm
       - name: Install PyInstaller
@@ -113,8 +129,8 @@ jobs:
           path: dist/AI_Tools_Installer_macOS_arm64.dmg
 
   # -----------------------------------------------------------------------
-  # 4. Build the macOS (Intel) installer. Runs on macos-13, the last
-  #    GitHub-hosted runner with an x86_64 image.
+  # 4. Build the macOS (Intel) installer. macos-13 is the last GitHub-hosted
+  #    runner with an x86_64 image.
   # -----------------------------------------------------------------------
   build-macos-x64:
     name: Build macOS x64 .dmg
@@ -129,6 +145,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Free up disk space
+        run: |
+          echo "Before cleanup:"
+          df -h / | tail -1
+          sudo rm -rf /Applications/Xcode_*.app
+          sudo rm -rf /Library/Developer/CoreSimulator
+          sudo rm -rf /Users/runner/Library/Developer/Xcode/DerivedData
+          sudo rm -rf /Users/runner/Library/Caches
+          sudo rm -rf /opt/homebrew
+          echo "After cleanup:"
+          df -h / | tail -1
       - name: Download latest CLI payloads (macOS x64)
         run: python scripts/fetch_latest.py --download --platform macos-x64
       - name: Install PyInstaller
@@ -147,9 +174,8 @@ jobs:
           path: dist/AI_Tools_Installer_macOS_x64.dmg
 
   # -----------------------------------------------------------------------
-  # 5. Cut a GitHub release with all three artifacts. Tag uses the date
-  #    so each daily run produces a unique, chronologically-sortable tag.
-  #    Skipped if any build failed.
+  # 5. Cut a GitHub release with all three artifacts. Skipped if any build
+  #    failed.
   # -----------------------------------------------------------------------
   release:
     name: Cut GitHub Release
