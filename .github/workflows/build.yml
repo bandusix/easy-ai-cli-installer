@@ -81,20 +81,12 @@ jobs:
 
   # -----------------------------------------------------------------------
   # 3. Build the macOS (Apple Silicon) installer.
-  #    The macOS GitHub-hosted runner has only ~14 GB of free space; even
-  #    after wiping Xcode and DerivedData, hdiutil consistently fails with
-  #    "No space left on device" while building a compressed .dmg. We
-  #    skip the .dmg and ship the .app as a .zip instead. Users unzip and
-  #    double-click; macOS handles it natively.
-  #
-  #    (Intel macOS dropped: the only Intel runner is macos-13, which
-  #    GitHub is deprecating and which now spends 30+ minutes in the
-  #    queue. Apple-Silicon Macs can also run Intel binaries via Rosetta
-  #    if anyone really needs it, but in 2026+ Apple Silicon is the
-  #    default.)
+  #    GitHub-hosted macOS runners have limited disk space (~14GB usable).
+  #    We aggressively clean system files before building, then use hdiutil
+  #    with a sparse image to minimize peak disk usage during .dmg creation.
   # -----------------------------------------------------------------------
   build-macos-arm:
-    name: Build macOS arm64 .app
+    name: Build macOS arm64 .dmg
     needs: detect-updates
     if: |
       needs.detect-updates.outputs.needs_update == 'true' ||
@@ -106,15 +98,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Free up disk space
+      - name: Free up disk space (aggressive cleanup)
         run: |
           echo "Before cleanup:"
           df -h / | tail -1
-          sudo rm -rf /Applications/Xcode_*.app
+          # Remove Xcode (largest consumer, ~20GB)
+          sudo rm -rf /Applications/Xcode*.app
+          # Remove simulators and device support files
           sudo rm -rf /Library/Developer/CoreSimulator
-          sudo rm -rf /Users/runner/Library/Developer/Xcode/DerivedData
+          sudo rm -rf ~/Library/Developer/CoreSimulator
+          # Remove DerivedData and caches
+          sudo rm -rf ~/Library/Developer/Xcode/DerivedData
+          sudo rm -rf ~/Library/Caches
           sudo rm -rf /Users/runner/Library/Caches
+          # Remove Homebrew (we don't need it, saves ~3GB)
           sudo rm -rf /opt/homebrew
+          sudo rm -rf /usr/local/Homebrew
+          # Remove Android SDK if present
+          sudo rm -rf /Users/runner/Library/Android
+          sudo rm -rf ~/Library/Android
+          # Remove .NET and other runtimes we don't use
+          sudo rm -rf /usr/local/share/dotnet
+          sudo rm -rf /Library/Frameworks/Mono.framework
           echo "After cleanup:"
           df -h / | tail -1
       - name: Download latest CLI payloads (macOS arm64)
@@ -123,15 +128,24 @@ jobs:
         run: pip install pyinstaller==6.*
       - name: Build with PyInstaller
         run: pyinstaller build.spec --clean
-      - name: Zip the .app
+      - name: Create .dmg with sparse image (lower disk usage)
         run: |
-          ditto -c -k --sequesterRsrc --keepParent \
-            dist/AI_Tools_Installer.app \
-            dist/AI_Tools_Installer_macOS_arm64.zip
+          # Use UDRW (read-write, uncompressed) format first to avoid
+          # the compression overhead, then convert to UDZO at the end.
+          # This uses less peak disk space than directly creating UDZO.
+          hdiutil create -volname "AI Tools Installer" \
+            -srcfolder dist/AI_Tools_Installer.app \
+            -ov -format UDRW \
+            temp.dmg
+          # Convert to compressed format
+          hdiutil convert temp.dmg -format UDZO \
+            -o dist/AI_Tools_Installer_macOS_arm64.dmg
+          rm temp.dmg
+          ls -lh dist/*.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: AI_Tools_Installer_macOS_arm64
-          path: dist/AI_Tools_Installer_macOS_arm64.zip
+          path: dist/AI_Tools_Installer_macOS_arm64.dmg
 
   # -----------------------------------------------------------------------
   # 4. Cut a GitHub release with both artifacts. Skipped if any build
@@ -158,10 +172,10 @@ jobs:
             ${{ needs.detect-updates.outputs.updated }}
 
             **Artifacts:**
-            - `AI_Tools_Installer_Windows.exe` — Windows x64
-            - `AI_Tools_Installer_macOS_arm64.zip` — macOS Apple Silicon (unzip, double-click `AI Tools Installer.app`)
+            - `AI_Tools_Installer_Windows.exe` — Windows x64 (double-click to run)
+            - `AI_Tools_Installer_macOS_arm64.dmg` — macOS Apple Silicon (double-click to mount, drag to Applications)
           files: |
             artifacts/AI_Tools_Installer_Windows/AI_Tools_Installer_Windows.exe
-            artifacts/AI_Tools_Installer_macOS_arm64/AI_Tools_Installer_macOS_arm64.zip
+            artifacts/AI_Tools_Installer_macOS_arm64/AI_Tools_Installer_macOS_arm64.dmg
           fail_on_unmatched_files: false
           generate_release_notes: true

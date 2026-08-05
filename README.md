@@ -35,8 +35,8 @@
 无论你是技术小白还是老手,只需 1 分钟即可完成安装。请前往 [Releases](https://github.com/bandusix/easy-ai-cli-installer/releases) 页面下载最新版本。
 
 #### 🍏 macOS 用户
-1. 下载 `AI_Tools_Installer_macOS_arm64.zip` 文件(Apple Silicon M 系列芯片)。
-2. 双击解压 `.zip` 文件,你会看到一个名为 `AI Tools Installer.app` 的应用程序。
+1. 下载 `AI_Tools_Installer_macOS_arm64.dmg` 文件(Apple Silicon M 系列芯片)。
+2. 双击打开 `.dmg` 文件,会弹出一个包含 `AI Tools Installer.app` 的窗口。
 3. 双击运行 `AI Tools Installer.app`(如果系统提示"无法打开",**右键点击 .app → 选择"打开"** → 在弹出的对话框中点击"打开")。
 4. 在弹出的可视化界面中:
    - **右上角可切换界面语言**
@@ -165,8 +165,8 @@ A foolproof, one-click GUI installer designed to set up **5 popular AI coding CL
 Install everything in just 1 minute, no technical knowledge required. Head over to the [Releases](https://github.com/bandusix/easy-ai-cli-installer/releases) page to download the latest version.
 
 #### 🍏 macOS Users
-1. Download the `AI_Tools_Installer_macOS_arm64.zip` file (for Apple Silicon M-series chips).
-2. Double-click the `.zip` file to extract it, you will see an application named `AI Tools Installer.app`.
+1. Download the `AI_Tools_Installer_macOS_arm64.dmg` file (for Apple Silicon M-series chips).
+2. Double-click the `.dmg` file to mount it, you will see a window with `AI Tools Installer.app`.
 3. Double-click `AI Tools Installer.app` to run it (If macOS blocks it with "cannot be opened", **right-click the .app → choose "Open"** → in the pop-up dialog, click "Open").
 4. In the pop-up GUI:
    - **Switch display language from the top-right corner**
