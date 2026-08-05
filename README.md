@@ -1,6 +1,10 @@
 # Easy AI CLI Installer
 *Created by **[bandusix](https://github.com/bandusix)** | Fork with Claude API relay + online source support*
 
+<p align="center">
+  <img src="assets/icon-256.png" alt="AI CLI Installer Icon" width="128">
+</p>
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Build Status](https://github.com/bandusix/easy-ai-cli-installer/actions/workflows/build.yml/badge.svg)](https://github.com/bandusix/easy-ai-cli-installer/actions)
 
