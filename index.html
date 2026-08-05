@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tools Installer — Ship CLIs, Not Configs</title>
+    <meta name="description" content="One-click offline installer for Claude Code, Codex, Gemini CLI, Kimi Code, and Lark CLI. Zero config. Zero npm hell.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000;
+            --fg: #fff;
+            --gray: #666;
+            --accent: #0f0;
+            --mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', 'Source Code Pro', monospace;
+            --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            font-family: var(--sans);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Scan line effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                transparent 50%,
+                rgba(0, 255, 0, 0.02) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Noise texture */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' /%3E%3C/svg%3E");
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        header {
+            padding: 2rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            backdrop-filter: blur(20px);
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--mono);
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links a {
+            color: var(--gray);
+            text-decoration: none;
+            margin-left: 2rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            font-family: var(--mono);
+        }
+
+        .nav-links a:hover {
+            color: var(--fg);
+        }
+
+        /* Hero */
+        .hero {
+            padding: 8rem 0 4rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(180deg, #fff 0%, #666 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .subtitle {
+            font-family: var(--mono);
+            font-size: 1.2rem;
+            color: var(--gray);
+            margin-bottom: 3rem;
+            letter-spacing: 0.02em;
+        }
+
+        .hero .subtitle span {
+            color: var(--accent);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0; }
+        }
+
+        /* CTA buttons */
+        .cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            font-family: var(--mono);
+            font-size: 0.95rem;
+            text-decoration: none;
+            border: 2px solid var(--fg);
+            background: transparent;
+            color: var(--fg);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--fg);
+            transition: left 0.3s;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn:hover {
+            color: var(--bg);
+        }
+
+        .btn-primary {
+            background: var(--fg);
+            color: var(--bg);
+        }
+
+        .btn-primary::before {
+            background: transparent;
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: var(--fg);
+        }
+
+        /* Terminal preview */
+        .terminal {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            line-height: 1.8;
+            max-width: 700px;
+            margin: 0 auto 4rem;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .terminal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2rem;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .terminal-dots {
+            position: absolute;
+            top: 0.75rem;
+            left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .terminal-dots span {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .terminal-content {
+            padding-top: 2rem;
+        }
+
+        .terminal .prompt {
+            color: var(--accent);
+        }
+
+        .terminal .comment {
+            color: var(--gray);
+        }
+
+        /* Features grid */
+        .features {
+            padding: 4rem 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+
+        .feature {
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+            transition: all 0.3s;
+        }
+
+        .feature:hover {
+            border-color: rgba(255,255,255,0.2);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-family: var(--mono);
+            color: var(--accent);
+        }
+
+        .feature h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .feature p {
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* Stats */
+        .stats {
+            padding: 6rem 0;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            padding: 2rem;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            font-family: var(--mono);
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Tools showcase */
+        .tools {
+            padding: 6rem 0;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tools h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            font-weight: 600;
+        }
+
+        .tools-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .tool-card {
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.02);
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .tool-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0,255,0,0.1);
+        }
+
+        .tool-name {
+            font-family: var(--mono);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .tool-desc {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .tool-version {
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            opacity: 0.7;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 0 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 6rem;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-left {
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .footer-links a {
+            color: var(--gray);
+            text-decoration: none;
+            margin-left: 2rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--fg);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 4rem 0 2rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .cta {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links a {
+                margin: 0 1rem;
+            }
+        }
+
+        /* Glitch effect on hover */
+        .glitch {
+            position: relative;
+        }
+
+        .glitch:hover::before,
+        .glitch:hover::after {
+            content: attr(data-text);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch:hover::before {
+            animation: glitch-1 0.3s infinite;
+            color: #0ff;
+            z-index: -1;
+        }
+
+        .glitch:hover::after {
+            animation: glitch-2 0.3s infinite;
+            color: #f0f;
+            z-index: -2;
+        }
+
+        @keyframes glitch-1 {
+            0%, 100% { transform: translate(0); }
+            33% { transform: translate(-2px, 2px); }
+            66% { transform: translate(2px, -2px); }
+        }
+
+        @keyframes glitch-2 {
+            0%, 100% { transform: translate(0); }
+            33% { transform: translate(2px, -2px); }
+            66% { transform: translate(-2px, 2px); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo"><span>$</span> ai-tools-installer</div>
+                <div class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#tools">Tools</a>
+                    <a href="https://github.com/bandusix/easy-ai-cli-installer">GitHub</a>
+                    <a href="https://github.com/bandusix/easy-ai-cli-installer/releases">Releases</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1 class="glitch" data-text="Ship CLIs, Not Configs">Ship CLIs, Not Configs</h1>
+                <p class="subtitle">One-click offline installer for AI coding tools<span>_</span></p>
+
+                <div class="cta">
+                    <a href="https://github.com/bandusix/easy-ai-cli-installer/releases/latest/download/AI_Tools_Installer_macOS_arm64.dmg" class="btn btn-primary">Download for macOS</a>
+                    <a href="https://github.com/bandusix/easy-ai-cli-installer/releases/latest/download/AI_Tools_Installer_Windows.exe" class="btn">Download for Windows</a>
+                </div>
+
+                <div class="terminal">
+                    <div class="terminal-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="terminal-content">
+<span class="comment"># Download, double-click, install. That's it.</span>
+<span class="prompt">$</span> open AI_Tools_Installer.dmg
+<span class="comment"># Select: Claude Code, Codex, Gemini CLI, Kimi, Lark</span>
+<span class="comment"># Click: Install Now</span>
+<span class="comment"># Done. No npm, no Node.js, no PATH hell.</span>
+
+<span class="prompt">$</span> claude --version
+<span class="comment"># 2.1.221</span>
+
+<span class="prompt">$</span> codex --version
+<span class="comment"># rust-v0.146.0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">AI CLIs Bundled</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Config Files</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Offline</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">1</div>
+                        <div class="stat-label">Click</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <h2>Built for developers who ship</h2>
+                <div class="features-grid">
+                    <div class="feature">
+                        <div class="feature-icon">⚡︎</div>
+                        <h3>Zero Config</h3>
+                        <p>No npm install. No PATH exports. No version conflicts. Just download, double-click, and all CLIs are ready in your terminal.</p>
+                    </div>
+
+                    <div class="feature">
+                        <div class="feature-icon">🔒</div>
+                        <h3>100% Offline</h3>
+                        <p>Bundled mode packs Node.js runtime + every CLI tarball + binaries into a single executable. Install on air-gapped machines, no network required.</p>
+                    </div>
+
+                    <div class="feature">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Auto-Update</h3>
+                        <p>Latest mode fetches newest releases from npm and GitHub at install time. Or use the bundled payload — rebuilt daily by CI.</p>
+                    </div>
+
+                    <div class="feature">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Claude API Relay</h3>
+                        <p>Fill in your custom Base URL + Token in the GUI. Only affects the <code>claude</code> command, leaves other CLIs and system env untouched.</p>
+                    </div>
+
+                    <div class="feature">
+                        <div class="feature-icon">🌐</div>
+                        <h3>Trilingual UI</h3>
+                        <p>English, Simplified Chinese, Traditional Chinese. Auto-detects your system locale, with a manual switcher in the top-right corner.</p>
+                    </div>
+
+                    <div class="feature">
+                        <div class="feature-icon">🚀</div>
+                        <h3>Daily CI Builds</h3>
+                        <p>GitHub Actions checks npm and GitHub Releases every 24 hours. New CLI version? Installer rebuilds, repacks, and publishes automatically.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tools" class="tools">
+            <div class="container">
+                <h2>5 AI CLIs, one installer</h2>
+                <div class="tools-list">
+                    <div class="tool-card">
+                        <div class="tool-name">Claude Code</div>
+                        <div class="tool-desc">Anthropic's official CLI for Claude. Talk to Claude straight from your terminal.</div>
+                        <div class="tool-version">v2.1.221</div>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-name">Codex CLI</div>
+                        <div class="tool-desc">OpenAI's coding assistant. Generate code, debug, refactor, all in your shell.</div>
+                        <div class="tool-version">rust-v0.146.0</div>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-name">Gemini CLI</div>
+                        <div class="tool-desc">Google's Gemini models in your terminal. Multimodal AI at your fingertips.</div>
+                        <div class="tool-version">v0.53.1</div>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-name">Kimi Code</div>
+                        <div class="tool-desc">Moonshot AI's coding CLI. Long-context reasoning for complex codebases.</div>
+                        <div class="tool-version">v0.31.1</div>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-name">Lark CLI</div>
+                        <div class="tool-desc">Feishu/Lark official CLI. Automate workflows, integrations, and more.</div>
+                        <div class="tool-version">v1.0.82</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    © 2026 bandusix · MIT License
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/bandusix/easy-ai-cli-installer">GitHub</a>
+                    <a href="https://github.com/bandusix/easy-ai-cli-installer/releases">Releases</a>
+                    <a href="https://github.com/bandusix/easy-ai-cli-installer/blob/main/README.md">Docs</a>
+                    <a href="https://github.com/bandusix/easy-ai-cli-installer/blob/main/CI.md">CI Pipeline</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
