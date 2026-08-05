@@ -103,23 +103,23 @@ jobs:
           echo "Before cleanup:"
           df -h / | tail -1
           # Remove Xcode (largest consumer, ~20GB)
-          sudo rm -rf /Applications/Xcode*.app
+          sudo rm -rf /Applications/Xcode*.app || true
           # Remove simulators and device support files
-          sudo rm -rf /Library/Developer/CoreSimulator
-          sudo rm -rf ~/Library/Developer/CoreSimulator
+          sudo rm -rf /Library/Developer/CoreSimulator || true
+          sudo rm -rf ~/Library/Developer/CoreSimulator || true
           # Remove DerivedData and caches
-          sudo rm -rf ~/Library/Developer/Xcode/DerivedData
-          sudo rm -rf ~/Library/Caches
-          sudo rm -rf /Users/runner/Library/Caches
+          sudo rm -rf ~/Library/Developer/Xcode/DerivedData || true
+          sudo rm -rf ~/Library/Caches/* || true
+          sudo rm -rf /Users/runner/Library/Caches/* || true
           # Remove Homebrew (we don't need it, saves ~3GB)
-          sudo rm -rf /opt/homebrew
-          sudo rm -rf /usr/local/Homebrew
+          sudo rm -rf /opt/homebrew || true
+          sudo rm -rf /usr/local/Homebrew || true
           # Remove Android SDK if present
-          sudo rm -rf /Users/runner/Library/Android
-          sudo rm -rf ~/Library/Android
+          sudo rm -rf /Users/runner/Library/Android || true
+          sudo rm -rf ~/Library/Android || true
           # Remove .NET and other runtimes we don't use
-          sudo rm -rf /usr/local/share/dotnet
-          sudo rm -rf /Library/Frameworks/Mono.framework
+          sudo rm -rf /usr/local/share/dotnet || true
+          sudo rm -rf /Library/Frameworks/Mono.framework || true
           echo "After cleanup:"
           df -h / | tail -1
       - name: Download latest CLI payloads (macOS arm64)
