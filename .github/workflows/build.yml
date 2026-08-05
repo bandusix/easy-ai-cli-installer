@@ -41,6 +41,8 @@ jobs:
         with:
           python-version: '3.11'
       - id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/fetch_latest.py --check --platform clis
       - name: Summary
         run: |
@@ -65,6 +67,8 @@ jobs:
         with:
           python-version: '3.11'
       - name: Download latest CLI payloads (Windows)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/fetch_latest.py --download --platform windows
       - name: Install PyInstaller
         run: pip install pyinstaller==6.*
@@ -123,6 +127,8 @@ jobs:
           echo "After cleanup:"
           df -h / | tail -1
       - name: Download latest CLI payloads (macOS arm64)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/fetch_latest.py --download --platform macos-arm
       - name: Install PyInstaller
         run: pip install pyinstaller==6.*

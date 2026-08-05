@@ -126,16 +126,30 @@ TOOLS = {
 # Tiny HTTP helpers
 # ---------------------------------------------------------------------------
 def _http_get_json(url, timeout=30):
-    req = urllib.request.Request(url, headers={
+    headers = {
         "User-Agent": "easy-ai-cli-installer-build",
         "Accept": "application/json",
-    })
+    }
+    # Use GITHUB_TOKEN if available (CI environment) to avoid rate limits
+    if "github.com" in url or "api.github.com" in url:
+        token = os.environ.get("GITHUB_TOKEN")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode("utf-8"))
 
 
 def _download_to(url, dest, timeout=180):
-    req = urllib.request.Request(url, headers={"User-Agent": "easy-ai-cli-installer-build"})
+    headers = {"User-Agent": "easy-ai-cli-installer-build"}
+    # Use GITHUB_TOKEN for GitHub downloads if available
+    if "github.com" in url or "api.github.com" in url:
+        token = os.environ.get("GITHUB_TOKEN")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+    req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         with open(dest, "wb") as out:
             shutil.copyfileobj(r, out)
