@@ -616,31 +616,31 @@
                     <div class="tool-card">
                         <div class="tool-name">Claude Code</div>
                         <div class="tool-desc">Anthropic's official CLI for Claude. Talk to Claude straight from your terminal.</div>
-                        <div class="tool-version" data-version="claude">v2.1.221</div><!-- claude -->
+                        <div class="tool-version">v2.1.221</div>
                     </div>
 
                     <div class="tool-card">
                         <div class="tool-name">Codex CLI</div>
                         <div class="tool-desc">OpenAI's coding assistant. Generate code, debug, refactor, all in your shell.</div>
-                        <div class="tool-version" data-version="codex">rust-v0.146.0</div><!-- codex -->
+                        <div class="tool-version">rust-v0.146.0</div>
                     </div>
 
                     <div class="tool-card">
                         <div class="tool-name">Gemini CLI</div>
                         <div class="tool-desc">Google's Gemini models in your terminal. Multimodal AI at your fingertips.</div>
-                        <div class="tool-version" data-version="gemini">v0.53.1</div><!-- gemini -->
+                        <div class="tool-version">v0.53.1</div>
                     </div>
 
                     <div class="tool-card">
                         <div class="tool-name">Kimi Code</div>
                         <div class="tool-desc">Moonshot AI's coding CLI. Long-context reasoning for complex codebases.</div>
-                        <div class="tool-version" data-version="kimi">v0.31.1</div><!-- kimi -->
+                        <div class="tool-version">v0.31.1</div>
                     </div>
 
                     <div class="tool-card">
                         <div class="tool-name">Lark CLI</div>
                         <div class="tool-desc">Feishu/Lark official CLI. Automate workflows, integrations, and more.</div>
-                        <div class="tool-version" data-version="lark">v1.0.82</div><!-- lark -->
+                        <div class="tool-version">v1.0.82</div>
                     </div>
                 </div>
             </div>
@@ -662,127 +662,5 @@
             </div>
         </div>
     </footer>
-
-    <!-- Language switcher -->
-    <div id="lang-switcher" style="position: fixed; top: 5rem; right: 2rem; z-index: 200; display: flex; gap: 0.5rem; flex-wrap: wrap; max-width: 300px;">
-        <button class="lang-btn" data-lang="en" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">EN</button>
-        <button class="lang-btn" data-lang="zh" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">中文</button>
-        <button class="lang-btn" data-lang="fr" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">FR</button>
-        <button class="lang-btn" data-lang="es" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">ES</button>
-        <button class="lang-btn" data-lang="ru" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">РУ</button>
-        <button class="lang-btn" data-lang="ar" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">AR</button>
-    </div>
-
-    <script>
-        // i18n system - UN 6 official languages
-        let currentLang = 'en';
-        let translations = {};
-
-        // Load translations
-        fetch('i18n.json')
-            .then(r => r.json())
-            .then(data => {
-                translations = data;
-                // Auto-detect browser language
-                const browserLang = navigator.language.split('-')[0];
-                const supportedLangs = ['en', 'zh', 'fr', 'es', 'ru', 'ar'];
-                currentLang = supportedLangs.includes(browserLang) ? browserLang : 'en';
-                switchLanguage(currentLang);
-            });
-
-        function switchLanguage(lang) {
-            currentLang = lang;
-            const t = translations[lang];
-            if (!t) return;
-
-            // Update all translatable elements
-            document.querySelector('.hero h1').textContent = t.title;
-            document.querySelector('.hero .subtitle').innerHTML = t.subtitle + '<span>_</span>';
-            document.querySelectorAll('.btn-primary')[0].textContent = t.download_macos;
-            document.querySelectorAll('.btn')[1].textContent = t.download_windows;
-
-            // Update terminal comments
-            const terminalComments = document.querySelectorAll('.terminal .comment');
-            if (terminalComments.length >= 4) {
-                terminalComments[0].textContent = t.terminal_comment_1;
-                terminalComments[1].textContent = t.terminal_comment_2;
-                terminalComments[2].textContent = t.terminal_comment_3;
-                terminalComments[3].textContent = t.terminal_comment_4;
-            }
-
-            // Update stats
-            const statLabels = document.querySelectorAll('.stat-label');
-            if (statLabels.length >= 4) {
-                statLabels[0].textContent = t.stats_title_1;
-                statLabels[1].textContent = t.stats_title_2;
-                statLabels[2].textContent = t.stats_title_3;
-                statLabels[3].textContent = t.stats_title_4;
-            }
-
-            // Update features section
-            document.querySelector('.features h2').textContent = t.features_title;
-            const features = document.querySelectorAll('.feature');
-            if (features.length >= 6) {
-                features[0].querySelector('h3').textContent = t.feature_1_title;
-                features[0].querySelector('p').textContent = t.feature_1_desc;
-                features[1].querySelector('h3').textContent = t.feature_2_title;
-                features[1].querySelector('p').textContent = t.feature_2_desc;
-                features[2].querySelector('h3').textContent = t.feature_3_title;
-                features[2].querySelector('p').textContent = t.feature_3_desc;
-                features[3].querySelector('h3').textContent = t.feature_4_title;
-                features[3].querySelector('p').textContent = t.feature_4_desc;
-                features[4].querySelector('h3').textContent = t.feature_5_title;
-                features[4].querySelector('p').textContent = t.feature_5_desc;
-                features[5].querySelector('h3').textContent = t.feature_6_title;
-                features[5].querySelector('p').textContent = t.feature_6_desc;
-            }
-
-            // Update tools section
-            document.querySelector('.tools h2').textContent = t.tools_title;
-            const toolDescs = document.querySelectorAll('.tool-desc');
-            if (toolDescs.length >= 5) {
-                toolDescs[0].textContent = t.claude_desc;
-                toolDescs[1].textContent = t.codex_desc;
-                toolDescs[2].textContent = t.gemini_desc;
-                toolDescs[3].textContent = t.kimi_desc;
-                toolDescs[4].textContent = t.lark_desc;
-            }
-
-            // Highlight active language button
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                if (btn.dataset.lang === lang) {
-                    btn.style.background = '#0f0';
-                    btn.style.color = '#000';
-                    btn.style.borderColor = '#0f0';
-                } else {
-                    btn.style.background = 'rgba(255,255,255,0.1)';
-                    btn.style.color = '#fff';
-                    btn.style.borderColor = 'rgba(255,255,255,0.2)';
-                }
-            });
-
-            // RTL for Arabic
-            if (lang === 'ar') {
-                document.documentElement.dir = 'rtl';
-            } else {
-                document.documentElement.dir = 'ltr';
-            }
-        }
-
-        // Language button click handlers
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.addEventListener('click', () => switchLanguage(btn.dataset.lang));
-            btn.addEventListener('mouseenter', function() {
-                if (this.dataset.lang !== currentLang) {
-                    this.style.background = 'rgba(255,255,255,0.2)';
-                }
-            });
-            btn.addEventListener('mouseleave', function() {
-                if (this.dataset.lang !== currentLang) {
-                    this.style.background = 'rgba(255,255,255,0.1)';
-                }
-            });
-        });
-    </script>
 </body>
 </html>
