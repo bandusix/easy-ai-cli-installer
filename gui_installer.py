@@ -449,11 +449,11 @@ def install_feishu(source_mode="bundled"):
 # Tool registry — drives both the GUI rows and the install worker
 # ---------------------------------------------------------------------------
 TOOLS = [
-    {"id": "codex", "icon": "C", "color": "#3B82C4", "install": install_codex},
-    {"id": "claude", "icon": "A", "color": "#CC785C", "install": install_claude_code},
-    {"id": "gemini", "icon": "G", "color": "#8B5CF6", "install": install_gemini},
-    {"id": "kimi", "icon": "K", "color": "#0EA5A6", "install": install_kimi},
-    {"id": "feishu", "icon": "L", "color": "#3370FF", "install": install_feishu},
+    {"id": "codex", "icon": "C", "color": "#00FF00", "install": install_codex},
+    {"id": "claude", "icon": "A", "color": "#00FF00", "install": install_claude_code},
+    {"id": "gemini", "icon": "G", "color": "#00FF00", "install": install_gemini},
+    {"id": "kimi", "icon": "K", "color": "#00FF00", "install": install_kimi},
+    {"id": "feishu", "icon": "L", "color": "#00FF00", "install": install_feishu},
 ]
 
 
@@ -609,45 +609,38 @@ def detect_language():
 
 
 # ---------------------------------------------------------------------------
-# Platform-aware design tokens
+# Hacker-style theme (unified for Windows and macOS)
+# Black/white/green terminal aesthetic matching the landing page
 # ---------------------------------------------------------------------------
-if IS_WIN:
-    COLOR_BG = "#F3F3F3"
-    COLOR_CARD = "#FFFFFF"
-    COLOR_CARD_BORDER = "#E5E5E5"
-    COLOR_SHADOW = "#E4E4E4"
-    COLOR_TEXT = "#1A1A1A"
-    COLOR_SUBTEXT = "#5C5C5C"
-    COLOR_ACCENT = "#0067C0"
-    COLOR_ACCENT_HOVER = "#005A9E"
-    COLOR_TOGGLE_OFF = "#C7C7C7"
-    COLOR_DIVIDER = "#EBEBEB"
-    RADIUS_CARD = 8
-    RADIUS_BTN = 6
-    RADIUS_ICON = 8
-    FONT_FAMILY = "Segoe UI"
-    FONT_FAMILY_ZH = "Microsoft YaHei UI"
-else:
-    COLOR_BG = "#F5F5F7"
-    COLOR_CARD = "#FFFFFF"
-    COLOR_CARD_BORDER = "#E3E3E6"
-    COLOR_SHADOW = "#E6E6EA"
-    COLOR_TEXT = "#1D1D1F"
-    COLOR_SUBTEXT = "#6E6E73"
-    COLOR_ACCENT = "#007AFF"
-    COLOR_ACCENT_HOVER = "#0066D6"
-    COLOR_TOGGLE_OFF = "#D1D1D6"
-    COLOR_DIVIDER = "#ECECEE"
-    RADIUS_CARD = 16
-    RADIUS_BTN = 10
-    RADIUS_ICON = 12
-    FONT_FAMILY = ".AppleSystemUIFont"
-    FONT_FAMILY_ZH = "PingFang SC"
+COLOR_BG = "#000000"           # Pure black background
+COLOR_CARD = "#0A0A0A"         # Slightly lighter black for cards
+COLOR_CARD_BORDER = "#1A1A1A"  # Dark gray border
+COLOR_SHADOW = "#000000"       # No shadow (pure black)
+COLOR_TEXT = "#FFFFFF"         # Pure white text
+COLOR_SUBTEXT = "#666666"      # Gray subtext
+COLOR_ACCENT = "#00FF00"       # Terminal green
+COLOR_ACCENT_HOVER = "#00CC00" # Slightly darker green
+COLOR_TOGGLE_OFF = "#333333"   # Dark gray for off state
+COLOR_DIVIDER = "#1A1A1A"      # Dark divider
+RADIUS_CARD = 0                # Sharp corners (no rounding)
+RADIUS_BTN = 0                 # Sharp buttons
+RADIUS_ICON = 0                # Sharp icons
 
-COLOR_SUCCESS = "#2E9B4E" if not IS_WIN else "#107C10"
-COLOR_ERROR = "#D63A2E" if not IS_WIN else "#C42B1C"
-COLOR_FIELD_BG = "#F7F7F7" if IS_WIN else "#F5F5F7"
-COLOR_FIELD_BORDER = "#D4D4D4" if IS_WIN else "#D2D2D7"
+# Monospace font with fallbacks
+if IS_WIN:
+    FONT_FAMILY = "Courier New"
+    FONT_FALLBACKS = ["Consolas", "Lucida Console", "monospace"]
+else:
+    FONT_FAMILY = "Monaco"
+    FONT_FALLBACKS = ["Menlo", "Courier", "monospace"]
+
+FONT_FAMILY_ZH = "SimHei" if IS_WIN else "PingFang SC"
+
+COLOR_SUCCESS = "#00FF00"      # Terminal green
+COLOR_ERROR = "#FF0000"        # Terminal red
+COLOR_FIELD_BG = "#0A0A0A"     # Dark input fields
+COLOR_FIELD_BORDER = "#333333" # Gray borders
+
 
 
 def family_for(lang):
@@ -656,6 +649,27 @@ def family_for(lang):
     if lang == "zh-Hans":
         return FONT_FAMILY_ZH
     return FONT_FAMILY
+
+
+def get_monospace_font(size=10, weight="normal"):
+    """Try to create monospace font with fallbacks"""
+    import tkinter.font as tkfont
+
+    # Try primary font
+    try:
+        return tkfont.Font(family=FONT_FAMILY, size=size, weight=weight)
+    except:
+        pass
+
+    # Try fallbacks
+    for fallback in FONT_FALLBACKS:
+        try:
+            return tkfont.Font(family=fallback, size=size, weight=weight)
+        except:
+            continue
+
+    # Ultimate fallback: default fixed font
+    return tkfont.Font(family="TkFixedFont", size=size, weight=weight)
 
 
 # ---------------------------------------------------------------------------
@@ -1301,10 +1315,14 @@ class InstallerApp:
 
     def _install_worker(self, selected, source_mode, base_url, auth_token):
         S = STRINGS[self.lang]
+        total = len(selected)
         try:
-            for tool in selected:
-                self.root.after(0, lambda t=tool: self.set_status(
-                    S[f"status_installing_{t['id']}"], COLOR_SUBTEXT))
+            for idx, tool in enumerate(selected, start=1):
+                # Show progress: "1/5 Installing Codex CLI..."
+                progress_prefix = f"[{idx}/{total}] "
+                status_text = progress_prefix + S[f"status_installing_{tool['id']}"]
+                self.root.after(0, lambda t=status_text: self.set_status(t, COLOR_ACCENT))
+
                 if tool["id"] == "claude":
                     tool["install"](source_mode=source_mode,
                                     base_url=base_url, auth_token=auth_token)

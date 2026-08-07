@@ -28,6 +28,10 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
+# Platform-specific icon paths
+icon_win = 'assets/icon.ico' if sys.platform == 'win32' else None
+icon_mac = 'assets/icon-512.png' if sys.platform == 'darwin' else None
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -44,6 +48,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=icon_win,  # Windows ICO
 )
 
 # macOS: turn the single binary into a proper .app bundle so it can be
@@ -52,7 +57,7 @@ if sys.platform == 'darwin':
     app = BUNDLE(
         exe,
         name='AI_Tools_Installer.app',
-        icon=None,
+        icon=icon_mac,  # macOS uses PNG (iconutil will convert iconset on runner)
         bundle_identifier='com.bandusix.easyaiinstaller',
         info_plist={
             'CFBundleName': 'AI Tools Installer',
