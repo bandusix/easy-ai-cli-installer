@@ -71,7 +71,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/fetch_latest.py --download --platform windows
       - name: Install PyInstaller
-        run: pip install pyinstaller==6.*
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller pillow==6.*
       - name: Build with PyInstaller
         run: pyinstaller build.spec --clean
       - name: Rename artifact
@@ -131,7 +133,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/fetch_latest.py --download --platform macos-arm
       - name: Install PyInstaller
-        run: pip install pyinstaller==6.*
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller pillow==6.*
       - name: Build with PyInstaller
         run: pyinstaller build.spec --clean
       - name: Create .dmg with sparse image (lower disk usage)
