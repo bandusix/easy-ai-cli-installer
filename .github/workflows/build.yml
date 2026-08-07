@@ -73,7 +73,7 @@ jobs:
       - name: Install PyInstaller
         run: |
           pip install --upgrade pip
-          pip install pyinstaller pillow==6.*
+          pip install pyinstaller pillow
       - name: Build with PyInstaller
         run: pyinstaller build.spec --clean
       - name: Rename artifact
@@ -135,7 +135,7 @@ jobs:
       - name: Install PyInstaller
         run: |
           pip install --upgrade pip
-          pip install pyinstaller pillow==6.*
+          pip install pyinstaller pillow
       - name: Build with PyInstaller
         run: pyinstaller build.spec --clean
       - name: Create .dmg with sparse image (lower disk usage)
