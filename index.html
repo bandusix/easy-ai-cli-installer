@@ -424,20 +424,95 @@
 
         /* Responsive */
         @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            header {
+                padding: 1rem 0;
+            }
+
+            .logo {
+                font-size: 1rem;
+            }
+
             .hero {
-                padding: 4rem 0 2rem;
+                padding: 3rem 0 2rem;
             }
 
             .hero h1 {
-                font-size: 2.5rem;
+                font-size: 2rem;
+                line-height: 1.2;
+            }
+
+            .hero .subtitle {
+                font-size: 1rem;
             }
 
             .cta {
                 flex-direction: column;
+                gap: 1rem;
             }
 
             .btn {
                 width: 100%;
+                padding: 1rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            /* Terminal block */
+            .terminal {
+                padding: 1rem;
+                font-size: 0.75rem;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .terminal pre {
+                overflow-x: auto;
+            }
+
+            /* Stats grid */
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+                padding: 2rem 0;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .stat-label {
+                font-size: 0.75rem;
+            }
+
+            /* Features grid */
+            .features h2, .tools h2 {
+                font-size: 1.8rem;
+            }
+
+            .feature-grid, .tool-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .feature, .tool-card {
+                padding: 1.5rem;
+            }
+
+            .feature h3, .tool-card h3 {
+                font-size: 1.2rem;
+            }
+
+            .tool-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .tool-version {
+                font-size: 0.7rem;
             }
 
             .nav-links {
@@ -446,11 +521,37 @@
 
             .footer-content {
                 flex-direction: column;
+                gap: 1rem;
                 text-align: center;
             }
 
+            .footer-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
             .footer-links a {
-                margin: 0 1rem;
+                margin: 0;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat {
+                padding: 1rem;
+            }
+
+            .terminal {
+                font-size: 0.7rem;
+                padding: 0.75rem;
             }
         }
 
