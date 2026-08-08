@@ -36,7 +36,13 @@
 ### Mobile (<768px)
 - **Language Switcher**: ✅ 移到底部居中
 - **Background**: ✅ 黑色半透明背景
-- **Responsive**: ✅ 无内容遮挡
+- **Responsive Rules**: ✅ 35+ 规则(从 5 扩展)
+- **Layout**: ✅ Stats 2列→1列, Cards 1列
+- **Typography**: ✅ 字体自动缩放 (h1: 3.5rem→2rem→1.75rem)
+- **Terminal**: ✅ 横向滚动,无溢出
+- **Buttons**: ✅ 全宽,足够触摸区域(44px+)
+- **Min Width**: ✅ 支持 375px (iPhone SE)
+- **详细报告**: 📄 见 MOBILE-FIX.md
 
 ## P0+P1 问题修复验证
 
