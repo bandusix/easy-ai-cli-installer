@@ -774,6 +774,21 @@
         <button class="lang-btn" data-lang="ar" style="padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">AR</button>
     </div>
 
+    <!-- Mobile language switcher (hamburger menu) -->
+    <div id="lang-switcher-mobile" style="display: none;">
+        <button id="lang-menu-toggle" style="position: fixed; top: 1rem; right: 1rem; z-index: 201; width: 44px; height: 44px; background: rgba(0, 255, 0, 0.1); border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 6px; color: #0f0; font-family: var(--mono); font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+            🌐
+        </button>
+        <div id="lang-menu-panel" style="position: fixed; top: 4rem; right: 1rem; z-index: 200; background: rgba(0, 0, 0, 0.98); border: 1px solid rgba(0, 255, 0, 0.3); border-radius: 6px; padding: 0.5rem; display: none; flex-direction: column; gap: 0.5rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">
+            <button class="lang-btn-mobile" data-lang="en" style="padding: 0.6rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: var(--mono); font-size: 0.85rem; cursor: pointer; border-radius: 4px; text-align: left; min-width: 120px;">🇬🇧 English</button>
+            <button class="lang-btn-mobile" data-lang="zh" style="padding: 0.6rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: var(--mono); font-size: 0.85rem; cursor: pointer; border-radius: 4px; text-align: left; min-width: 120px;">🇨🇳 中文</button>
+            <button class="lang-btn-mobile" data-lang="fr" style="padding: 0.6rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: var(--mono); font-size: 0.85rem; cursor: pointer; border-radius: 4px; text-align: left; min-width: 120px;">🇫🇷 Français</button>
+            <button class="lang-btn-mobile" data-lang="es" style="padding: 0.6rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: var(--mono); font-size: 0.85rem; cursor: pointer; border-radius: 4px; text-align: left; min-width: 120px;">🇪🇸 Español</button>
+            <button class="lang-btn-mobile" data-lang="ru" style="padding: 0.6rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: var(--mono); font-size: 0.85rem; cursor: pointer; border-radius: 4px; text-align: left; min-width: 120px;">🇷🇺 Русский</button>
+            <button class="lang-btn-mobile" data-lang="ar" style="padding: 0.6rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-family: var(--mono); font-size: 0.85rem; cursor: pointer; border-radius: 4px; text-align: left; min-width: 120px;">🇸🇦 العربية</button>
+        </div>
+    </div>
+
     <style>
         /* Language switcher active state */
         .lang-btn.active {
@@ -782,49 +797,31 @@
             border-color: var(--accent) !important;
         }
 
-        /* Mobile: compact floating button at bottom-right */
+        .lang-btn-mobile.active {
+            background: rgba(0, 255, 0, 0.2) !important;
+            border-color: var(--accent) !important;
+        }
+
+        /* Mobile: hide desktop switcher, show hamburger menu */
         @media (max-width: 768px) {
             #lang-switcher {
-                position: fixed;
-                top: auto;
-                bottom: 1rem;
-                left: auto;
-                right: 1rem;
-                max-width: fit-content;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: flex-end;
-                align-items: center;
-                background: rgba(0, 0, 0, 0.95);
-                padding: 0.4rem;
-                border: 1px solid rgba(0, 255, 0, 0.3);
-                border-radius: 6px;
-                gap: 0.3rem;
-                box-shadow: 0 4px 12px rgba(0, 255, 0, 0.2);
+                display: none !important;
             }
 
-            .lang-btn {
-                flex: 0 0 auto;
-                min-width: 40px;
-                height: auto;
-                padding: 0.4rem 0.5rem !important;
-                font-size: 0.65rem !important;
-                border-radius: 4px;
+            #lang-switcher-mobile {
+                display: block !important;
             }
         }
 
-        /* Extra small screens - single column if needed */
-        @media (max-width: 360px) {
-            #lang-switcher {
-                gap: 0.25rem;
-                padding: 0.3rem;
-            }
+        /* Hover effects */
+        .lang-btn:hover, .lang-btn-mobile:hover {
+            background: rgba(0, 255, 0, 0.2) !important;
+            border-color: var(--accent) !important;
+        }
 
-            .lang-btn {
-                min-width: 36px;
-                padding: 0.35rem 0.45rem !important;
-                font-size: 0.6rem !important;
-            }
+        #lang-menu-toggle:hover {
+            background: rgba(0, 255, 0, 0.2) !important;
+            transform: scale(1.05);
         }
     </style>
 
@@ -1100,7 +1097,7 @@
                 toolDescs[4].textContent = t.lark_desc;
             }
 
-            // Highlight active language button
+            // Highlight active language button (desktop and mobile)
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 if (btn.dataset.lang === lang) {
                     btn.style.background = '#0f0';
@@ -1113,6 +1110,16 @@
                 }
             });
 
+            document.querySelectorAll('.lang-btn-mobile').forEach(btn => {
+                if (btn.dataset.lang === lang) {
+                    btn.style.background = 'rgba(0, 255, 0, 0.2)';
+                    btn.style.borderColor = '#0f0';
+                } else {
+                    btn.style.background = 'rgba(255,255,255,0.05)';
+                    btn.style.borderColor = 'rgba(255,255,255,0.1)';
+                }
+            });
+
             // RTL for Arabic
             if (lang === 'ar') {
                 document.documentElement.dir = 'rtl';
@@ -1121,7 +1128,7 @@
             }
         }
 
-        // Language button click handlers
+        // Language button click handlers (desktop)
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.addEventListener('click', () => switchLanguage(btn.dataset.lang));
             btn.addEventListener('mouseenter', function() {
@@ -1130,6 +1137,41 @@
                 }
             });
             btn.addEventListener('mouseleave', function() {
+                if (this.dataset.lang !== currentLang) {
+                    this.style.background = 'rgba(255,255,255,0.1)';
+                }
+            });
+        });
+
+        // Mobile language menu toggle
+        const menuToggle = document.getElementById('lang-menu-toggle');
+        const menuPanel = document.getElementById('lang-menu-panel');
+
+        if (menuToggle && menuPanel) {
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = menuPanel.style.display === 'flex';
+                menuPanel.style.display = isOpen ? 'none' : 'flex';
+                menuToggle.textContent = isOpen ? '🌐' : '✕';
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!menuPanel.contains(e.target) && e.target !== menuToggle) {
+                    menuPanel.style.display = 'none';
+                    menuToggle.textContent = '🌐';
+                }
+            });
+
+            // Mobile language button click handlers
+            document.querySelectorAll('.lang-btn-mobile').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    switchLanguage(btn.dataset.lang);
+                    menuPanel.style.display = 'none';
+                    menuToggle.textContent = '🌐';
+                });
+            });
+        }
                 if (this.dataset.lang !== currentLang) {
                     this.style.background = 'rgba(255,255,255,0.1)';
                 }
