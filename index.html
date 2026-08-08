@@ -775,7 +775,7 @@
     </div>
 
     <style>
-        /* Mobile: move language switcher to bottom, horizontal scroll */
+        /* Mobile: move language switcher to bottom, horizontal layout */
         @media (max-width: 768px) {
             #lang-switcher {
                 position: fixed;
@@ -784,10 +784,35 @@
                 left: 1rem;
                 right: 1rem;
                 max-width: none;
+                flex-direction: row;
+                flex-wrap: wrap;
                 justify-content: center;
+                align-items: center;
                 background: rgba(0, 0, 0, 0.9);
                 padding: 0.5rem;
                 border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 8px;
+            }
+
+            .lang-btn {
+                flex: 0 0 auto;
+                min-width: 48px;
+                height: auto;
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.7rem !important;
+            }
+        }
+
+        /* Extra small screens - 2 rows */
+        @media (max-width: 400px) {
+            #lang-switcher {
+                gap: 0.4rem;
+            }
+
+            .lang-btn {
+                min-width: 44px;
+                padding: 0.4rem 0.6rem !important;
+                font-size: 0.65rem !important;
             }
         }
     </style>
