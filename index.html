@@ -1037,6 +1037,36 @@
         // Apply language on page load
         document.addEventListener('DOMContentLoaded', () => {
             switchLanguage(currentLang);
+
+            // Mobile language menu toggle (must be after DOM loaded)
+            const menuToggle = document.getElementById('lang-menu-toggle');
+            const menuPanel = document.getElementById('lang-menu-panel');
+
+            if (menuToggle && menuPanel) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = menuPanel.style.display === 'flex';
+                    menuPanel.style.display = isOpen ? 'none' : 'flex';
+                    menuToggle.textContent = isOpen ? '🌐' : '✕';
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!menuPanel.contains(e.target) && e.target !== menuToggle) {
+                        menuPanel.style.display = 'none';
+                        menuToggle.textContent = '🌐';
+                    }
+                });
+
+                // Mobile language button click handlers
+                document.querySelectorAll('.lang-btn-mobile').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        switchLanguage(btn.dataset.lang);
+                        menuPanel.style.display = 'none';
+                        menuToggle.textContent = '🌐';
+                    });
+                });
+            }
         });
 
         function switchLanguage(lang) {
@@ -1137,41 +1167,6 @@
                 }
             });
             btn.addEventListener('mouseleave', function() {
-                if (this.dataset.lang !== currentLang) {
-                    this.style.background = 'rgba(255,255,255,0.1)';
-                }
-            });
-        });
-
-        // Mobile language menu toggle
-        const menuToggle = document.getElementById('lang-menu-toggle');
-        const menuPanel = document.getElementById('lang-menu-panel');
-
-        if (menuToggle && menuPanel) {
-            menuToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isOpen = menuPanel.style.display === 'flex';
-                menuPanel.style.display = isOpen ? 'none' : 'flex';
-                menuToggle.textContent = isOpen ? '🌐' : '✕';
-            });
-
-            // Close menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!menuPanel.contains(e.target) && e.target !== menuToggle) {
-                    menuPanel.style.display = 'none';
-                    menuToggle.textContent = '🌐';
-                }
-            });
-
-            // Mobile language button click handlers
-            document.querySelectorAll('.lang-btn-mobile').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    switchLanguage(btn.dataset.lang);
-                    menuPanel.style.display = 'none';
-                    menuToggle.textContent = '🌐';
-                });
-            });
-        }
                 if (this.dataset.lang !== currentLang) {
                     this.style.background = 'rgba(255,255,255,0.1)';
                 }
