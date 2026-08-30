@@ -22,6 +22,7 @@ on:
 # Read-only by default; release job escalates to write to create releases.
 permissions:
   contents: write
+  actions: write
 
 jobs:
   # -----------------------------------------------------------------------
@@ -84,6 +85,7 @@ jobs:
         with:
           name: AI_Tools_Installer_Windows
           path: dist/AI_Tools_Installer_Windows.exe
+          retention-days: 1
 
   # -----------------------------------------------------------------------
   # 3. Build the macOS (Apple Silicon) installer.
@@ -156,6 +158,7 @@ jobs:
         with:
           name: AI_Tools_Installer_macOS_arm64
           path: dist/AI_Tools_Installer_macOS_arm64.dmg
+          retention-days: 1
 
   # -----------------------------------------------------------------------
   # 4. Cut a GitHub release with both artifacts. Skipped if any build
@@ -189,3 +192,16 @@ jobs:
             artifacts/AI_Tools_Installer_macOS_arm64/AI_Tools_Installer_macOS_arm64.dmg
           fail_on_unmatched_files: false
           generate_release_notes: true
+
+      - name: Delete release transport artifacts
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate \
+            "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts?per_page=100" \
+            --jq '.artifacts[].id' |
+          while IFS= read -r artifact_id; do
+            gh api --method DELETE \
+              "repos/${{ github.repository }}/actions/artifacts/${artifact_id}"
+          done
